@@ -16,10 +16,9 @@ env:
     - DJANGO_APP="django-project-name-here"
     - COMMIT_HASH="$(git rev-parse --short=7 HEAD)"
     - IMAGE_TAG="${RELEASE_NAME}:${COMMIT_HASH}"
-    - DEPLOY_SCRIPT_BASE=https://raw.githubusercontent.com/uw-it-aca/gcp-app-deploy/master/
-    - secure: $(curl -Ls ${DEPLOY_SCRIPT_BASE}/secret/docker_user.txt)
-    - secure: $(curl -Ls ${DEPLOY_SCRIPT_BASE}/secret/docker_pw.txt)
-    - secure: $(curl -Ls ${DEPLOY_SCRIPT_BASE}/secret/github.txt)
+    - secure: <per-repository travis encrypted "DOCKER_USER=<username-here>">
+    - secure: <per-repository travis encrypted "DOCKER_PASS=<docker-password-here>">
+    - secure: <per-repository travis encrypted "GH_AUTH_TOKEN=<github-auth-token-here>">
 
 install:
   - docker build -t "$IMAGE_TAG" .
@@ -36,7 +35,7 @@ after_success:
   - coverage combine
   - coveralls
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [[ "$TRAVIS_BRANCH" =~ ^(develop|master)$ ]]; then
-    curl -Ls ${DEPLOY_SCRIPT_BASE}/travis-ci/deploy.sh | bash;
+    curl -Ls https://raw.githubusercontent.com/uw-it-aca/gcp-app-deploy/master/travis-ci/deploy.sh | bash;
     fi
 
 cache:
