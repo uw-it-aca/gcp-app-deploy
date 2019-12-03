@@ -68,10 +68,10 @@ echo "DEPLOY $APP_NAME in $GCP_PROJECT"
 echo "#####################################"
 
 if [ -n "$DOCKER_USER" ]; then
-    REPO_TAG="${DOCKER_USER}/${RELEASE_NAME}:${COMMIT_HASH}"
+    REPO_TAG="${DOCKER_USER}/${IMAGE_TAG}"
     echo -n "$DOCKER_PASS" | docker login --username="$DOCKER_USER" --password-stdin;
 else
-    REPO_TAG="gcr.io/${GCP_PROJECT}/${RELEASE_NAME}:${COMMIT_HASH}"
+    REPO_TAG="gcr.io/${GCP_PROJECT}/${IMAGE_TAG}"
     #
     # do GCP authentication magic here?
     #
@@ -111,7 +111,7 @@ echo "CLONE chart repository $HELM_CHART_REPO_PATH"
 git clone --depth 1 "$HELM_CHART_REPO" --branch master $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
-helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string commitHash=$COMMIT_HASH -f $HELM_CHART_VALUES > $LOCAL_MANIFEST
+helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string image.tag=$IMAGE_TAG -f $HELM_CHART_VALUES > $LOCAL_MANIFEST
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
 kubeval $LOCAL_MANIFEST --strict --exit-on-error --ignore-missing-schemas
