@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eu
-trap 'travis_terminate 1' ERR
+trap 'exit 1' ERR
 
 # stage $RELEASE_NAME as flux repository branch candidate for deployment
 #
@@ -29,7 +29,7 @@ case ${TRAVIS_BRANCH} in
         ;;
     *)
         echo "Branch $TRAVIS_BRANCH not configured for deployment"
-        travis_terminate 1
+        exit 1
         ;;
 esac
 
