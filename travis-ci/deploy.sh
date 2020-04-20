@@ -14,22 +14,21 @@ trap 'exit 1' ERR
 #      DOCKER_USER, DOCKER_PASS: push docker hub repo
 #      GH_AUTH_TOKEN: branch, merge flux repo
 #
+# OPTIONAL:
+#      APP_INSTANCE: if set, used for instance in dev GCP project
+#
 
-# branch specific settings
+# master branch hardwired to prod GCP instance and "prod" app instance
 case ${TRAVIS_BRANCH} in
-    develop)
-        APP_INSTANCE="test"
-        FLUX_INSTANCE="dev"
-        GCP_PROJECT="uwit-mci-0010"
-        ;;
     master)
         APP_INSTANCE="prod"
         FLUX_INSTANCE="prod"
         GCP_PROJECT="uwit-mci-0011"
         ;;
     *)
-        echo "Branch $TRAVIS_BRANCH not configured for deployment"
-        exit 1
+        APP_INSTANCE="${APP_INSTANCE:-test}"
+        FLUX_INSTANCE="dev"
+        GCP_PROJECT="uwit-mci-0010"
         ;;
 esac
 
