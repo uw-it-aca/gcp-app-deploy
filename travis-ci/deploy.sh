@@ -17,6 +17,11 @@ trap 'exit 1' ERR
 # OPTIONAL:
 #      APP_INSTANCE: if set, used for instance in dev GCP project
 #
+# NOTE:
+#      helm template values will be pulled from the file
+#           docker/${APP_INSTANCE}-values.yml
+#      in the projects git repository
+#
 
 # master branch hardwired to prod GCP instance and "prod" app instance
 case ${TRAVIS_BRANCH} in
@@ -24,11 +29,16 @@ case ${TRAVIS_BRANCH} in
         APP_INSTANCE="prod"
         FLUX_INSTANCE="prod"
         GCP_PROJECT="uwit-mci-0011"
+        FLUX_RELEASE_SUFFIX=""
         ;;
     *)
         APP_INSTANCE="${APP_INSTANCE:-test}"
         FLUX_INSTANCE="dev"
         GCP_PROJECT="uwit-mci-0010"
+        FLUX_RELEASE_SUFFIX=""
+        if [ $APP_INSTANCE != "test" ]; then
+          FLUX_RELEASE_SUFFIX="-${APP_INSTANCE}"
+        fi
         ;;
 esac
 
@@ -51,7 +61,7 @@ FLUX_LOCAL_DIR=${HOME}/$FLUX_REPO_NAME
 FLUX_REPO_PATH=${GITHUB_REPO_OWNER}/$FLUX_REPO_NAME
 FLUX_REPO=https://${GH_AUTH_TOKEN}@github.com/${FLUX_REPO_PATH}.git
 
-MANIFEST_FILE_NAME=${RELEASE_NAME}.yaml
+MANIFEST_FILE_NAME=${RELEASE_NAME}${FLUX_RELEASE_SUFFIX}.yaml
 LOCAL_MANIFEST=${HOME}/$MANIFEST_FILE_NAME
 FLUX_RELEASE_MANIFEST=releases/${FLUX_INSTANCE}/$MANIFEST_FILE_NAME
 FLUX_RELEASE_BRANCH_NAME=release/${FLUX_INSTANCE}/${RELEASE_NAME}/$COMMIT_HASH
@@ -143,7 +153,7 @@ EOF
 FLUX_PULL_URL=$(jq '.html_url' ${FLUX_PR_OUTPUT})
 echo "SUBMITTED $FLUX_PULL_URL"
 
-if [ "$TRAVIS_BRANCH" = "develop" ]; then
+if [ "$TRAVIS_BRANCH" != "master" ]; then
   echo "MERGING $FLUX_PULL_URL"
   GITHUB_API_MERGE="$(jq --raw-output '.url' ${FLUX_PR_OUTPUT})/merge"
   curl -H "Authorization: Token ${GH_AUTH_TOKEN}" -H "Content-type: application/json" -X PUT $GITHUB_API_MERGE -d @- <<EOF
