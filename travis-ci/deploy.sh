@@ -25,7 +25,7 @@ trap 'exit 1' ERR
 
 # master branch hardwired to prod GCP instance and "prod" app instance
 case ${TRAVIS_BRANCH} in
-    master)
+    main|master)
         APP_INSTANCE="prod"
         FLUX_INSTANCE="prod"
         GCP_PROJECT="uwit-mci-0011"
@@ -153,7 +153,7 @@ EOF
 FLUX_PULL_URL=$(jq '.html_url' ${FLUX_PR_OUTPUT})
 echo "SUBMITTED $FLUX_PULL_URL"
 
-if [ "$TRAVIS_BRANCH" != "master" ]; then
+if [[ ! "$TRAVIS_BRANCH" =~ ^(main|master)$ ]]; then
   echo "MERGING $FLUX_PULL_URL"
   GITHUB_API_MERGE="$(jq --raw-output '.url' ${FLUX_PR_OUTPUT})/merge"
   curl -H "Authorization: Token ${GH_AUTH_TOKEN}" -H "Content-type: application/json" -X PUT $GITHUB_API_MERGE -d @- <<EOF
