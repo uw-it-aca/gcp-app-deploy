@@ -120,7 +120,7 @@ echo "CLONE chart repository $HELM_CHART_REPO_PATH"
 git clone --depth 1 "$HELM_CHART_REPO" --branch master $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
-helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string "image.tag=${COMMIT_HASH}" --set-string "gcpProject=${GCP_PROJECT}" -f $HELM_CHART_VALUES > $LOCAL_MANIFEST
+helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string "image.tag=${COMMIT_HASH}" -f $HELM_CHART_VALUES > $LOCAL_MANIFEST
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
 kubeval $LOCAL_MANIFEST --strict --exit-on-error --ignore-missing-schemas
