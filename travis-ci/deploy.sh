@@ -16,6 +16,8 @@ trap 'exit 1' ERR
 #
 # OPTIONAL:
 #      APP_INSTANCE: if set, used for instance in dev GCP project
+#      HELM_APP_VERSION: if set, use specified helm version (default "3.0.0")
+#      HELM_CHART_BRANCH: if set, use specified chart branch (default "master")
 #
 # NOTE:
 #      helm template values will be pulled from the file
@@ -42,6 +44,15 @@ case ${TRAVIS_BRANCH} in
         ;;
 esac
 
+# setup helm version and chart branch
+if [ -z "${HELM_APP_VERSION}" ]; then
+    HELM_APP_VERSION="3.0.0"
+fi
+
+if [ -z "${HELM_CHART_BRANCH}" ]; then
+    HELM_CHART_BRANCH="master"
+fi
+
 APP_NAME=${RELEASE_NAME}-prod-${APP_INSTANCE}
 HELM_CHART_NAME=django-production-chart
 HELM_CHART_VALUES=docker/${APP_INSTANCE}-values.yml
@@ -49,7 +60,7 @@ FLUX_REPO_NAME=gcp-flux-${FLUX_INSTANCE}
 GITHUB_REPO_OWNER=uw-it-aca
 
 HELM_APP_URL=https://get.helm.sh
-HELM_APP_TGZ=helm-v3.0.0-linux-amd64.tar.gz
+HELM_APP_TGZ=helm-v${HELM_APP_VERSION}-linux-amd64.tar.gz
 KUBEVAL_URL=https://github.com/instrumenta/kubeval/releases/latest/download
 KUBEVAL_TGZ=kubeval-linux-amd64.tar.gz
 
@@ -117,7 +128,7 @@ fi
 export PATH=${PATH}:${HOME}/kubeval/bin
 
 echo "CLONE chart repository $HELM_CHART_REPO_PATH"
-git clone --depth 1 "$HELM_CHART_REPO" --branch master $HELM_CHART_LOCAL_DIR
+git clone --depth 1 "$HELM_CHART_REPO" --branch ${HELM_CHART_BRANCH} $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
 helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string "image.tag=${COMMIT_HASH}" -f $HELM_CHART_VALUES > $LOCAL_MANIFEST
