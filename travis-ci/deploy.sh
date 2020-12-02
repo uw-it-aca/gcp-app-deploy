@@ -127,7 +127,7 @@ if [ ! -d $HOME/kubeval/bin ]; then
 fi
 export PATH=${PATH}:${HOME}/kubeval/bin
 
-echo "CLONE chart repository $HELM_CHART_REPO_PATH"
+echo "CLONE chart repository $HELM_CHART_REPO_PATH (${HELM_CHART_BRANCH})"
 git clone --depth 1 "$HELM_CHART_REPO" --branch ${HELM_CHART_BRANCH} $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
