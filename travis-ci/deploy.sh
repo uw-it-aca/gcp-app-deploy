@@ -45,13 +45,8 @@ case ${TRAVIS_BRANCH} in
 esac
 
 # setup helm version and chart branch
-if [ -z "${HELM_APP_VERSION}" ]; then
-    HELM_APP_VERSION="3.0.0"
-fi
-
-if [ -z "${HELM_CHART_BRANCH}" ]; then
-    HELM_CHART_BRANCH="master"
-fi
+:"${HELM_APP_VERSION=3.0.0}"
+:"${HELM_CHART_BRANCH=master}"
 
 APP_NAME=${RELEASE_NAME}-prod-${APP_INSTANCE}
 HELM_CHART_NAME=django-production-chart
@@ -135,6 +130,12 @@ helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string "image.tag=${COMMIT_H
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
 kubeval $LOCAL_MANIFEST --strict --exit-on-error --ignore-missing-schemas
+
+if [[ ! -z $(grep -e '^\s*securityContext\:.*$' "$LOCAL_MANIFEST") ]]; then
+    echo "SCAN generated manifest $MANIFEST_FILE_NAME against security policies"
+    # skip checkes: default namespace, service account tokens, mounted secrets
+    docker run -t -v ${HOME}/:/tf bridgecrew/checkov --quiet --skip-check CKV_K8S_21,CKV_K8S_35,CKV_K8S_43 -f /tf/${MANIFEST_FILE_NAME}
+fi
 
 echo "CLONE flux repository ${FLUX_REPO_PATH}"
 git clone --depth 1 "$FLUX_REPO" --branch master $FLUX_LOCAL_DIR 2>&1 | sed -E 's/[[:xdigit:]]{32,}/[secret]/g'
