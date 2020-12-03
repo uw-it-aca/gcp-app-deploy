@@ -136,6 +136,11 @@ helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string "image.tag=${COMMIT_H
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
 kubeval $LOCAL_MANIFEST --strict --exit-on-error --ignore-missing-schemas
 
+if [[ ! -z $(grep "$STRING" "$LOCAL_MANIFEST") ]]; then
+    echo "SCAN generated manifest $MANIFEST_FILE_NAME against security policies"
+    docker run -t -v ${HOME}/:/tf bridgecrew/checkov --quiet --skip-check CKV_K8S_21,CKV_K8S_35,CKV_K8S_43 -f /tf/$MANIFEST_FILE_NAME
+fi
+
 echo "CLONE flux repository ${FLUX_REPO_PATH}"
 git clone --depth 1 "$FLUX_REPO" --branch master $FLUX_LOCAL_DIR 2>&1 | sed -E 's/[[:xdigit:]]{32,}/[secret]/g'
 pushd $FLUX_LOCAL_DIR
