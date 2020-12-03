@@ -45,13 +45,8 @@ case ${TRAVIS_BRANCH} in
 esac
 
 # setup helm version and chart branch
-if [ -z "${HELM_APP_VERSION}" ]; then
-    HELM_APP_VERSION="3.0.0"
-fi
-
-if [ -z "${HELM_CHART_BRANCH}" ]; then
-    HELM_CHART_BRANCH="master"
-fi
+:"${HELM_APP_VERSION=3.0.0}"
+:"${HELM_CHART_BRANCH=master}"
 
 APP_NAME=${RELEASE_NAME}-prod-${APP_INSTANCE}
 HELM_CHART_NAME=django-production-chart
