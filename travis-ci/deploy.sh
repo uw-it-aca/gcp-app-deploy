@@ -44,27 +44,27 @@ case ${TRAVIS_BRANCH} in
         ;;
 esac
 
-# setup helm version and chart branch
-HELM_APP_VERSION=${HELM_APP_VERSION:-}
-if [ -z "${HELM_APP_VERSION}" ]; then
-    HELM_APP_VERSION="3.0.0"
-fi
+# helm defaults
+HELM_APP_VERSION="${HELM_APP_VERSION:-3.4.2}"
+HELM_CHART_BRANCH="${HELM_CHART_BRANCH:-master}"
+HELM_IMAGE="alpine/helm:${HELM_APP_VERSION}"
 
-HELM_CHART_BRANCH=${HELM_CHART_BRANCH:-}
-if [ -z "${HELM_CHART_BRANCH}" ]; then
-    HELM_CHART_BRANCH="master"
-fi
+# kubeval manifest validation defaults
+KUBEVAL_VERSION="${KUBEVAL_VERSION:-latest}"
+KUBEVAL_SKIP_KINDS="${KUBEVAL_SKIP_KINDS:-ExternalSecret,ServiceMonitor}"
+KUBEVAL_IMAGE="garethr/kubeval:${KUBEVAL_VERSION}"
 
+# checkov security policy scan defaults
+CHECKOV_VERSION="${CHECKOV_VERSION:-latest}"
+CHECKOV_IMAGE="bridgecrew/checkov:${CHECKOV_VERSION}"
+CHECKOV_SKIP_CHECKS="${CHECKOV_SKIP_CHECKS:-CKV_K8S_21,CKV_K8S_35,CKV_K8S_43}"
+
+# application specific values
 APP_NAME=${RELEASE_NAME}-prod-${APP_INSTANCE}
 HELM_CHART_NAME=django-production-chart
 HELM_CHART_VALUES=docker/${APP_INSTANCE}-values.yml
 FLUX_REPO_NAME=gcp-flux-${FLUX_INSTANCE}
 GITHUB_REPO_OWNER=uw-it-aca
-
-HELM_APP_URL=https://get.helm.sh
-HELM_APP_TGZ=helm-v${HELM_APP_VERSION}-linux-amd64.tar.gz
-KUBEVAL_URL=https://github.com/instrumenta/kubeval/releases/latest/download
-KUBEVAL_TGZ=kubeval-linux-amd64.tar.gz
 
 HELM_CHART_LOCAL_DIR=${HOME}/$HELM_CHART_NAME
 HELM_CHART_REPO_PATH=${GITHUB_REPO_OWNER}/${HELM_CHART_NAME}
@@ -105,43 +105,19 @@ if [ -n "$REPO_TAG" ]; then
     docker push "$REPO_TAG"
 fi
 
-if [ ! -d $HOME/helm/bin ]; then
-    echo "INSTALL helm"
-    if [ ! -d $HOME/helm ]; then mkdir $HOME/helm ; fi
-    pushd $HOME/helm
-    mkdir ./bin
-    curl -Lso ${HELM_APP_TGZ} ${HELM_APP_URL}/${HELM_APP_TGZ}
-    tar xzf ${HELM_APP_TGZ}
-    mv ./linux-amd64/helm ./bin/helm
-    popd
-fi
-export PATH=${PATH}:${HOME}/helm/bin
-
-if [ ! -d $HOME/kubeval/bin ]; then
-    echo "INSTALL kubeval"
-    if [ ! -d $HOME/kubeval ]; then mkdir $HOME/kubeval ; fi
-    pushd $HOME/kubeval
-    mkdir ./bin
-    curl -Lso ${KUBEVAL_TGZ} ${KUBEVAL_URL}/${KUBEVAL_TGZ}
-    tar xzf ${KUBEVAL_TGZ}
-    mv ./kubeval ./bin/kubeval
-    popd
-fi
-export PATH=${PATH}:${HOME}/kubeval/bin
-
 echo "CLONE chart repository $HELM_CHART_REPO_PATH (${HELM_CHART_BRANCH})"
 git clone --depth 1 "$HELM_CHART_REPO" --branch ${HELM_CHART_BRANCH} $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
-helm template $APP_NAME $HELM_CHART_LOCAL_DIR --set-string "image.tag=${COMMIT_HASH}" -f $HELM_CHART_VALUES > $LOCAL_MANIFEST
+docker run -ti -v ${HOME}:/app -v $HELM_CHART_LOCAL_DIR:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
-kubeval $LOCAL_MANIFEST --strict --exit-on-error --ignore-missing-schemas
+docker run -ti -v ${HOME}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS" $KUBEVAL_OUTPUT
 
 if [[ ! -z $(grep -e '^\s*securityContext\:.*$' "$LOCAL_MANIFEST") ]]; then
     echo "SCAN generated manifest $MANIFEST_FILE_NAME against security policies"
     # skip checkes: default namespace, service account tokens, mounted secrets
-    docker run -t -v ${HOME}/:/tf bridgecrew/checkov --quiet --skip-check CKV_K8S_21,CKV_K8S_35,CKV_K8S_43 -f /tf/${MANIFEST_FILE_NAME}
+    docker run -ti -v ${HOME}/:/app "$CHECKOV_IMAGE" --quiet --skip-check "$CHECKOV_SKIP_CHECKS" -f /app/${MANIFEST_FILE_NAME}
 fi
 
 echo "CLONE flux repository ${FLUX_REPO_PATH}"
