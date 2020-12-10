@@ -109,14 +109,14 @@ echo "CLONE chart repository $HELM_CHART_REPO_PATH (${HELM_CHART_BRANCH})"
 git clone --depth 1 "$HELM_CHART_REPO" --branch ${HELM_CHART_BRANCH} $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
-docker run -ti -v ${HOME}:/app -v $HELM_CHART_LOCAL_DIR:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
+docker run -i -v ${HOME}:/app -v $HELM_CHART_LOCAL_DIR:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
-docker run -ti -v ${HOME}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS" $KUBEVAL_OUTPUT
+docker run -i -v ${HOME}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS" $KUBEVAL_OUTPUT
 
 if [[ ! -z $(grep -e '^\s*securityContext\:.*$' "$LOCAL_MANIFEST") ]]; then
     echo "SCAN generated manifest $MANIFEST_FILE_NAME against security policies"
-    docker run -ti -v ${HOME}/:/app "$CHECKOV_IMAGE" --quiet --skip-check "$CHECKOV_SKIP_CHECKS" -f /app/${MANIFEST_FILE_NAME}
+    docker run -i -v ${HOME}/:/app "$CHECKOV_IMAGE" --quiet --skip-check "$CHECKOV_SKIP_CHECKS" -f /app/${MANIFEST_FILE_NAME}
 fi
 
 echo "CLONE flux repository ${FLUX_REPO_PATH}"
