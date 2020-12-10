@@ -66,19 +66,19 @@ HELM_CHART_VALUES=docker/${APP_INSTANCE}-values.yml
 FLUX_REPO_NAME=gcp-flux-${FLUX_INSTANCE}
 GITHUB_REPO_OWNER=uw-it-aca
 
-HELM_CHART_LOCAL_DIR=${HOME}/$HELM_CHART_NAME
+HELM_CHART_LOCAL_DIR=${PWD}/$HELM_CHART_NAME
 HELM_CHART_REPO_PATH=${GITHUB_REPO_OWNER}/${HELM_CHART_NAME}
 HELM_CHART_REPO=https://github.com/${HELM_CHART_REPO_PATH}.git
 
-FLUX_LOCAL_DIR=${HOME}/$FLUX_REPO_NAME
+FLUX_LOCAL_DIR=${PWD}/$FLUX_REPO_NAME
 FLUX_REPO_PATH=${GITHUB_REPO_OWNER}/$FLUX_REPO_NAME
 FLUX_REPO=https://${GH_AUTH_TOKEN}@github.com/${FLUX_REPO_PATH}.git
 
 MANIFEST_FILE_NAME=${RELEASE_NAME}${FLUX_RELEASE_SUFFIX}.yaml
-LOCAL_MANIFEST=${HOME}/$MANIFEST_FILE_NAME
+LOCAL_MANIFEST=${PWD}/$MANIFEST_FILE_NAME
 FLUX_RELEASE_MANIFEST=releases/${FLUX_INSTANCE}/$MANIFEST_FILE_NAME
 FLUX_RELEASE_BRANCH_NAME=release/${FLUX_INSTANCE}/${RELEASE_NAME}/$COMMIT_HASH
-FLUX_PR_OUTPUT=${HOME}/pr-${FLUX_INSTANCE}-${RELEASE_NAME}-${COMMIT_HASH}.json
+FLUX_PR_OUTPUT=${PWD}/pr-${FLUX_INSTANCE}-${RELEASE_NAME}-${COMMIT_HASH}.json
 
 COMMIT_MESSAGE="Automated ${FLUX_INSTANCE} deploy of ${TRAVIS_REPO_SLUG}:${COMMIT_HASH} by travis build ${TRAVIS_BUILD_NUMBER}"
 PULL_REQUEST_MESSAGE="Automated ${FLUX_INSTANCE} deploy of [${TRAVIS_REPO_SLUG}:${COMMIT_HASH}](/${TRAVIS_REPO_SLUG}/commit/${COMMIT_HASH})  Generated travis build [${TRAVIS_BUILD_NUMBER}]($TRAVIS_BUILD_WEB_URL)"
@@ -109,14 +109,14 @@ echo "CLONE chart repository $HELM_CHART_REPO_PATH (${HELM_CHART_BRANCH})"
 git clone --depth 1 "$HELM_CHART_REPO" --branch ${HELM_CHART_BRANCH} $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
-docker run -i -v ${HOME}:/app -v $HELM_CHART_LOCAL_DIR:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
+docker run -i -v ${PWD}:/app -v $HELM_CHART_LOCAL_DIR:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
-docker run -i -v ${HOME}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS" $KUBEVAL_OUTPUT
+docker run -i -v ${PWD}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS" $KUBEVAL_OUTPUT
 
 if [[ ! -z $(grep -e '^\s*securityContext\:.*$' "$LOCAL_MANIFEST") ]]; then
     echo "SCAN generated manifest $MANIFEST_FILE_NAME against security policies"
-    docker run -i -v ${HOME}/:/app "$CHECKOV_IMAGE" --quiet --skip-check "$CHECKOV_SKIP_CHECKS" -f /app/${MANIFEST_FILE_NAME}
+    docker run -i -v ${PWD}/:/app "$CHECKOV_IMAGE" --quiet --skip-check "$CHECKOV_SKIP_CHECKS" -f /app/${MANIFEST_FILE_NAME}
 fi
 
 echo "CLONE flux repository ${FLUX_REPO_PATH}"
