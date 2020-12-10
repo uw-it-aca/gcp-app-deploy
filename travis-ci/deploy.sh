@@ -112,7 +112,7 @@ echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
 docker run -i -v ${PWD}:/app -v $HELM_CHART_LOCAL_DIR:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
-docker run -i -v ${PWD}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS" $KUBEVAL_OUTPUT
+docker run -i -v ${PWD}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS"
 
 if [[ ! -z $(grep -e '^\s*securityContext\:.*$' "$LOCAL_MANIFEST") ]]; then
     echo "SCAN generated manifest $MANIFEST_FILE_NAME against security policies"
