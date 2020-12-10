@@ -116,7 +116,6 @@ docker run -ti -v ${HOME}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --str
 
 if [[ ! -z $(grep -e '^\s*securityContext\:.*$' "$LOCAL_MANIFEST") ]]; then
     echo "SCAN generated manifest $MANIFEST_FILE_NAME against security policies"
-    # skip checkes: default namespace, service account tokens, mounted secrets
     docker run -ti -v ${HOME}/:/app "$CHECKOV_IMAGE" --quiet --skip-check "$CHECKOV_SKIP_CHECKS" -f /app/${MANIFEST_FILE_NAME}
 fi
 
