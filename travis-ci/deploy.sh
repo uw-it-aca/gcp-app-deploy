@@ -25,7 +25,7 @@ trap 'exit 1' ERR
 #      in the projects git repository
 #
 
-# master branch hardwired to prod GCP instance and "prod" app instance
+# master/main branch hardwired to prod GCP instance and "prod" app instance
 case ${TRAVIS_BRANCH} in
     main|master)
         APP_INSTANCE="prod"
@@ -57,6 +57,10 @@ KUBEVAL_IMAGE="garethr/kubeval:${KUBEVAL_VERSION}"
 # checkov security policy scan defaults
 CHECKOV_VERSION="${CHECKOV_VERSION:-latest}"
 CHECKOV_IMAGE="bridgecrew/checkov:${CHECKOV_VERSION}"
+# acceptable policy violations:
+#    CKV_K8S_21 - default namespace policy
+#    CKV_K8S_35 - secret files preferred over environment
+#    CKV_K8S_43 - image reference by digest
 CHECKOV_SKIP_CHECKS="${CHECKOV_SKIP_CHECKS:-CKV_K8S_21,CKV_K8S_35,CKV_K8S_43}"
 
 # application specific values
@@ -109,7 +113,7 @@ echo "CLONE chart repository $HELM_CHART_REPO_PATH (${HELM_CHART_BRANCH})"
 git clone --depth 1 "$HELM_CHART_REPO" --branch ${HELM_CHART_BRANCH} $HELM_CHART_LOCAL_DIR
 
 echo "GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
-docker run -t -v ${PWD}:/app -v ${HELM_CHART_LOCAL_DIR}:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
+docker run -v ${PWD}:/app -v ${HELM_CHART_LOCAL_DIR}:/chart $HELM_IMAGE template $APP_NAME /chart --set-string "image.tag=${COMMIT_HASH}" -f /app/$HELM_CHART_VALUES > $LOCAL_MANIFEST
 
 echo "VALIDATE generated manifest $MANIFEST_FILE_NAME"
 docker run -t -v ${PWD}:/app "$KUBEVAL_IMAGE" /app/${MANIFEST_FILE_NAME} --strict --skip-kinds "$KUBEVAL_SKIP_KINDS"
