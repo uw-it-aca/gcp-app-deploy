@@ -99,9 +99,10 @@ echo "#####################################"
 if [ -n "$DOCKER_USER" ]; then
     REPO_TAG="${DOCKER_USER}/${IMAGE_TAG}"
     echo -n "$DOCKER_PASS" | docker login --username="$DOCKER_USER" --password-stdin
-elif [ -n "$GCLOUD_KEY" ]; then
+elif [ -n "$GCP_REGISTRY_KEY" ]; then
+    # https://cloud.google.com/container-registry/docs/advanced-authentication#json-key
     REPO_TAG="gcr.io/${GCP_REGISTRY_PROJECT}/${IMAGE_TAG}"
-    docker login --username=_json_key --password-stdin https://gcr.io <<< "$GCLOUD_KEY"
+    docker login --username=_json_key --password-stdin https://gcr.io <<< "$GCP_REGISTRY_KEY"
 else
     echo "Missing repository configuration"
     exit 1
