@@ -63,6 +63,9 @@ CHECKOV_IMAGE="bridgecrew/checkov:${CHECKOV_VERSION}"
 #    CKV_K8S_43 - image reference by digest
 CHECKOV_SKIP_CHECKS="${CHECKOV_SKIP_CHECKS:-CKV_K8S_21,CKV_K8S_35,CKV_K8S_43}"
 
+# GCP Registry values
+GCP_REGISTRY_PROJECT="uwit-mci-axdd"
+
 # application specific values
 APP_NAME=${RELEASE_NAME}-prod-${APP_INSTANCE}
 HELM_CHART_NAME=django-production-chart
@@ -93,21 +96,21 @@ echo "#####################################"
 echo "DEPLOY $APP_NAME in $GCP_PROJECT"
 echo "#####################################"
 
-if [ -n "$DOCKER_USER" ]; then
+if [ -n "${DOCKER_USER:-}" ]; then
     REPO_TAG="${DOCKER_USER}/${IMAGE_TAG}"
-    echo -n "$DOCKER_PASS" | docker login --username="$DOCKER_USER" --password-stdin;
+    echo -n "$DOCKER_PASS" | docker login --username="$DOCKER_USER" --password-stdin
+elif [ -n "${GCP_JSON_KEY:-}" ]; then
+    # https://cloud.google.com/container-registry/docs/advanced-authentication#json-key
+    REPO_TAG="gcr.io/${GCP_REGISTRY_PROJECT}/${IMAGE_TAG}"
+    cat "$GCP_JSON_KEY" | docker login --username=_json_key --password-stdin https://gcr.io
 else
-    REPO_TAG="gcr.io/${GCP_PROJECT}/${IMAGE_TAG}"
-    #
-    # do GCP authentication magic here?
-    #
+    echo "Missing repository configuration"
+    exit 1
 fi
 
-if [ -n "$REPO_TAG" ]; then
-    echo "PUSH image $IMAGE_TAG to $REPO_TAG"
-    docker tag "$IMAGE_TAG" "$REPO_TAG"
-    docker push "$REPO_TAG"
-fi
+echo "PUSH image $IMAGE_TAG to $REPO_TAG"
+docker tag "$IMAGE_TAG" "$REPO_TAG"
+docker push "$REPO_TAG"
 
 echo "CLONE chart repository $HELM_CHART_REPO_PATH (${HELM_CHART_BRANCH})"
 git clone --depth 1 "$HELM_CHART_REPO" --branch ${HELM_CHART_BRANCH} $HELM_CHART_LOCAL_DIR
