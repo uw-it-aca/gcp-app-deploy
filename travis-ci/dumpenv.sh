@@ -96,6 +96,15 @@ echo "######################################"
 echo "WOULD DEPLOY $APP_NAME in $GCP_PROJECT"
 echo "######################################"
 
+if [ -n "${DOCKER_USER:-}" ]; then
+    REPO_TAG="${DOCKER_USER}/${IMAGE_TAG}"
+elif [ -n "${GCP_JSON_KEY:-}" ]; then
+    REPO_TAG="gcr.io/${GCP_REGISTRY_PROJECT}/${IMAGE_TAG}"
+else
+    echo "Missing repository configuration"
+    exit 1
+fi
+
 echo "COMMIT MESSAGE: ${COMMIT_MESSAGE}"
 echo "PULL_REQUEST_MESSAGE: ${PULL_REQUEST_MESSAGE}"
 
