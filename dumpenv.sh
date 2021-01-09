@@ -26,7 +26,7 @@ trap 'exit 1' ERR
 #
 
 # master/main branch hardwired to prod GCP instance and "prod" app instance
-case ${TRAVIS_BRANCH} in
+case ${GIT_REPO_BRANCH} in
     main|master)
         APP_INSTANCE="prod"
         FLUX_INSTANCE="prod"
@@ -89,21 +89,12 @@ FLUX_PR_OUTPUT=${PWD}/pr-${FLUX_INSTANCE}-${RELEASE_NAME}-${COMMIT_HASH}.json
 
 GITHUB_API_PULLS=https://api.github.com/repos/${FLUX_REPO_PATH}/pulls
 
-COMMIT_MESSAGE="Automated ${FLUX_INSTANCE} deploy of ${TRAVIS_REPO_SLUG}:${COMMIT_HASH} by travis build ${TRAVIS_BUILD_NUMBER}"
-PULL_REQUEST_MESSAGE="Automated ${FLUX_INSTANCE} deploy of [${TRAVIS_REPO_SLUG}:${COMMIT_HASH}](/${TRAVIS_REPO_SLUG}/commit/${COMMIT_HASH})  Generated travis build [${TRAVIS_BUILD_NUMBER}]($TRAVIS_BUILD_WEB_URL)"
+COMMIT_MESSAGE="Automated ${FLUX_INSTANCE} deploy of ${GIT_REPO_SLUG}:${COMMIT_HASH} by travis build ${BUILD_NUMBER}"
+PULL_REQUEST_MESSAGE="Automated ${FLUX_INSTANCE} deploy of [${GIT_REPO_SLUG}:${COMMIT_HASH}](/${GIT_REPO_SLUG}/commit/${COMMIT_HASH})  Generated build [${BUILD_NUMBER}]($BUILD_WEB_URL)"
 
 echo "######################################"
 echo "WOULD DEPLOY $APP_NAME in $GCP_PROJECT"
 echo "######################################"
-
-if [ -n "${DOCKER_USER:-}" ]; then
-    REPO_TAG="${DOCKER_USER}/${IMAGE_TAG}"
-elif [ -n "${GCP_JSON_KEY:-}" ]; then
-    REPO_TAG="gcr.io/${GCP_REGISTRY_PROJECT}/${IMAGE_TAG}"
-else
-    echo "Missing repository configuration"
-    exit 1
-fi
 
 echo "COMMIT MESSAGE: ${COMMIT_MESSAGE}"
 echo "PULL_REQUEST_MESSAGE: ${PULL_REQUEST_MESSAGE}"
