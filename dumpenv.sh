@@ -89,7 +89,7 @@ FLUX_PR_OUTPUT=${PWD}/pr-${FLUX_INSTANCE}-${RELEASE_NAME}-${COMMIT_HASH}.json
 
 GITHUB_API_PULLS=https://api.github.com/repos/${FLUX_REPO_PATH}/pulls
 
-COMMIT_MESSAGE="Automated ${FLUX_INSTANCE} deploy of ${GIT_REPO_SLUG}:${COMMIT_HASH} by travis build ${BUILD_NUMBER}"
+COMMIT_MESSAGE="Automated ${FLUX_INSTANCE} deploy of ${GIT_REPO_SLUG}:${COMMIT_HASH} by build ${BUILD_NUMBER}"
 PULL_REQUEST_MESSAGE="Automated ${FLUX_INSTANCE} deploy of [${GIT_REPO_SLUG}:${COMMIT_HASH}](/${GIT_REPO_SLUG}/commit/${COMMIT_HASH})  Generated build [${BUILD_NUMBER}]($BUILD_WEB_URL)"
 
 echo "######################################"
