@@ -11,8 +11,11 @@ trap 'exit 1' ERR
 #      RELEASE_NAME: application's name as it is expressed in k8s cluster
 #      COMMIT_HASH: application's source commit to be deployed
 #      IMAGE_TAG: tag of docker image to be pushed to image repository
-#      DOCKER_USER, DOCKER_PASS: push docker hub repo
 #      GH_AUTH_TOKEN: branch, merge flux repo
+#      and either
+#      DOCKER_USER, DOCKER_PASS: push docker hub repo
+#      or
+#      GCP_JSON_KEY: file containing key to push image to GCR
 #
 # OPTIONAL:
 #      APP_INSTANCE: if set, used for instance in dev GCP project
