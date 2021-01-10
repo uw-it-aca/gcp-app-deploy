@@ -99,8 +99,6 @@ echo "######################################"
 echo "COMMIT MESSAGE: ${COMMIT_MESSAGE}"
 echo "PULL_REQUEST_MESSAGE: ${PULL_REQUEST_MESSAGE}"
 
-echo "WOULD PUSH image $IMAGE_TAG to $REPO_TAG"
-
 echo "WOULD CLONE chart repository $HELM_CHART_REPO_PATH (${HELM_CHART_BRANCH})"
 
 echo "WOULD GENERATE release manifest $MANIFEST_FILE_NAME using $HELM_CHART_VALUES"
