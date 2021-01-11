@@ -15,8 +15,10 @@
 # 
 # Adapting this config to a specific django project should be a simple matter of:
 #
-#  1) set RELEASE_NAME and DJANGO_APP suitable for project
-#  2) confirm that the build steps are suitable.  Likely they are, but
+#  1) set RELEASE_NAME suitable for deployment to k8s. The release name must
+#     also match the "repo" value in docker/*-values.yml
+#  2) set DJANGO_APP to the name of django project
+#  3) confirm that the build steps are suitable.  Likely they are, but
 #     some projects have an intermediate build step that could benefit
 #     from caching, so it may be useful to augment the build steps
 #
@@ -24,6 +26,7 @@
 name: Build, Test and Deploy
 
 env:
+  # release name must match "repo" value in docker/*-values.yml
   RELEASE_NAME: appname
   DJANGO_APP: djangoproject
   GCR_TAG_BASE: gcr.io/uwit-mci-axdd
