@@ -16,6 +16,7 @@ env:
     - DJANGO_APP="django-project-name-here"
     - COMMIT_HASH="$(git rev-parse --short=7 HEAD)"
     - IMAGE_TAG="${RELEASE_NAME}:${COMMIT_HASH}"
+    - DEPLOY_SCRIPT_BASE=https://raw.githubusercontent.com/uw-it-aca/gcp-app-deploy/master
     - secure: <per-repository travis encrypted "DOCKER_USER=<username-here>">
     - secure: <per-repository travis encrypted "DOCKER_PASS=<docker-password-here>">
     - secure: <per-repository travis encrypted "GH_AUTH_TOKEN=<github-auth-token-here>">
@@ -34,11 +35,20 @@ after_success:
   - cp /tmp/.coverage.* .
   - coverage combine
   - coveralls
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [[ "$TRAVIS_BRANCH" =~ ^(develop|master)$ ]]; then
-    curl -Ls https://raw.githubusercontent.com/uw-it-aca/gcp-app-deploy/master/travis-ci/deploy.sh | bash;
-    fi
 
-cache:
-  directories:
-    - "$HOME/helm"
-    - "$HOME/kubeval"
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    on:
+      branch: master
+      condition: $TRAVIS_PULL_REQUEST == "false"
+    script: >-
+      curl -Ls ${DEPLOY_SCRIPT_BASE}/travis-ci/deploy.sh | bash
+  - provider: script
+    skip_cleanup: true
+    on:
+      branch: dev
+      condition: $TRAVIS_PULL_REQUEST == "false"
+    script: >-
+      curl -Ls ${DEPLOY_SCRIPT_BASE}/travis-ci/deploy.sh | bash
