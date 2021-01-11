@@ -207,7 +207,7 @@ EOF
 }
 
 merge_flux_pull_request() {
-    echo "${DRY_RUN_PREFIX}MERGING $FLUX_PULL_URL"
+    echo "${DRY_RUN_PREFIX}MERGING ${FLUX_PULL_URL:-DRY_RUN}"
 
     if [[ -n $DRY_RUN_PREFIX ]]; then
         return
