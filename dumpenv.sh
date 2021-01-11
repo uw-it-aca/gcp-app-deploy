@@ -10,7 +10,6 @@ trap 'exit 1' ERR
 # PRECONDITION: inherited env vars from application's .travis.yml MUST include:
 #      RELEASE_NAME: application's name as it is expressed in k8s cluster
 #      COMMIT_HASH: application's source commit to be deployed
-#      IMAGE_TAG: tag of docker image to be pushed to image repository
 #      DOCKER_USER, DOCKER_PASS: push docker hub repo
 #      GH_AUTH_TOKEN: branch, merge flux repo
 #
