@@ -21,6 +21,7 @@ trap 'exit 1' ERR
 #                    used as the values prefix: docker/<APP_INSTANCE>-values.yml
 #      HELM_APP_VERSION: if set, use specified helm version (default "3.0.0")
 #      HELM_CHART_BRANCH: if set, use specified chart branch (default "master")
+#      DRY_RUN: only output steps that would run, but do not run them
 #
 # NOTE:
 #      helm template values will be pulled from the file
@@ -231,8 +232,7 @@ EOF
 }
 
 deploy() {
-    if [ $1 == "--dry-run"]; then
-        DRY_RUN=true
+    if [[ -n ${DRY_RUN:-} ]]; then
         DRY_RUN_PREFIX="WOULD: "
     else
         DRY_RUN_PREFIX=""
@@ -263,5 +263,5 @@ deploy() {
     fi
 }
 
-deploy "$@"
+deploy
 exit 0
