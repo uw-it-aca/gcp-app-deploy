@@ -202,7 +202,6 @@ submit_flux_pull_release() {
   "base": "master"
 }
 EOF
-    cat ${FLUX_PR_OUTPUT}
     FLUX_PULL_URL=$(jq '.html_url' ${FLUX_PR_OUTPUT})
     echo "SUBMITTED $FLUX_PULL_URL"
 }
