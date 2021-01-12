@@ -64,6 +64,10 @@ setup_context() {
     FLUX_LOCAL_DIR=${PWD}/$FLUX_REPO_NAME
     FLUX_PR_OUTPUT=${PWD}/pr-${FLUX_INSTANCE}-${RELEASE_NAME}-${COMMIT_HASH}.json
 
+    # flux commit messages
+    COMMIT_MESSAGE="Automated ${FLUX_INSTANCE} deploy of ${GIT_REPO_SLUG}:${COMMIT_HASH} build ${BUILD_NUMBER}"
+    PULL_REQUEST_MESSAGE="Automated ${FLUX_INSTANCE} deploy of [${GIT_REPO_SLUG}:${COMMIT_HASH}](/${GIT_REPO_SLUG}/commit/${COMMIT_HASH})  Generated build [${BUILD_NUMBER}]($BUILD_WEB_URL)"
+
     echo "#####################################"
     echo "DEPLOY $APP_NAME in $GCP_PROJECT"
     echo "#####################################"
@@ -182,9 +186,6 @@ add_and_commit_flux_release() {
 
 submit_flux_pull_release() {
     GITHUB_API_PULLS=https://api.github.com/repos/${FLUX_REPO_PATH}/pulls
-
-    COMMIT_MESSAGE="Automated ${FLUX_INSTANCE} deploy of ${GIT_REPO_SLUG}:${COMMIT_HASH} build ${BUILD_NUMBER}"
-    PULL_REQUEST_MESSAGE="Automated ${FLUX_INSTANCE} deploy of [${GIT_REPO_SLUG}:${COMMIT_HASH}](/${GIT_REPO_SLUG}/commit/${COMMIT_HASH})  Generated build [${BUILD_NUMBER}]($BUILD_WEB_URL)"
 
     echo "${DRY_RUN_PREFIX}SUBMIT $FLUX_RELEASE_BRANCH_NAME pull request"
 
