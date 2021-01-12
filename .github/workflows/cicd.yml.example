@@ -8,7 +8,7 @@
 #
 # Secrets externally:
 #
-#   GITHUB_TOKEN: access to local image cache, flux deployment repo
+#   GH_AUTH_TOKEN: access to private flux deployment repo
 #   GCP_JSON_KEY: Google Cloud Registry access key
 #
 #   NOTE: you may need to add your repo to GCR key's repo scope
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-18.04
 
     env:
-      GH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_AUTH_TOKEN: ${{ secrets.GH_AUTH_TOKEN }}
       GIT_REPO_SLUG: ${{ github.repository }}
       BUILD_NUMBER: ${{ github.run_id }}
       BUILD_WEB_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
