@@ -58,7 +58,9 @@ setup_context() {
 
     # flux repository
     FLUX_REPO_NAME=gcp-flux-${FLUX_INSTANCE}
+    FLUX_REPO_PATH=uw-it-aca/$FLUX_REPO_NAME
     FLUX_RELEASE_BRANCH_NAME=release/${FLUX_INSTANCE}/${RELEASE_NAME}/$COMMIT_HASH
+    FLUX_RELEASE_MANIFEST=releases/${FLUX_INSTANCE}/$MANIFEST_FILE_NAME
 
     # local paths
     FLUX_LOCAL_DIR=${PWD}/$FLUX_REPO_NAME
@@ -141,7 +143,6 @@ security_policy_scan() {
 }
 
 clone_flux_repository() {
-    FLUX_REPO_PATH=uw-it-aca/$FLUX_REPO_NAME
     FLUX_REPO=https://${GH_AUTH_TOKEN}@github.com/${FLUX_REPO_PATH}.git
 
     echo "${DRY_RUN_PREFIX}CLONE flux repository ${FLUX_REPO_PATH}"
@@ -154,7 +155,7 @@ clone_flux_repository() {
 }
 
 create_flux_release_branch() {
-    echo "${DRY_RUN_PREFIX}CREATE branch $FLUX_RELEASE_BRANCH_NAME"
+    echo "${DRY_RUN_PREFIX}CREATE branch $FLUX_RELEASE_BRANCH_NAME, add $FLUX_RELEASE_MANIFEST"
 
     if [[ -n $DRY_RUN_PREFIX ]]; then
         return
@@ -162,22 +163,22 @@ create_flux_release_branch() {
 
     pushd $FLUX_LOCAL_DIR
     git checkout -b $FLUX_RELEASE_BRANCH_NAME
+    cp -p $LOCAL_MANIFEST $FLUX_RELEASE_MANIFEST
+    git add $FLUX_RELEASE_MANIFEST
+    git status
     popd
 }
 
-add_and_commit_flux_release() {
-    FLUX_RELEASE_MANIFEST=releases/${FLUX_INSTANCE}/$MANIFEST_FILE_NAME
-
-    echo "${DRY_RUN_PREFIX}ADD ${FLUX_RELEASE_MANIFEST} and COMMIT"
+commit_flux_release() {
+    echo "${DRY_RUN_PREFIX}COMMIT flux release $FLUX_RELEASE_BRANCH_NAME"
 
     if [[ -n $DRY_RUN_PREFIX ]]; then
         return
     fi
 
     pushd $FLUX_LOCAL_DIR
-    cp -p $LOCAL_MANIFEST $FLUX_RELEASE_MANIFEST
-    git add $FLUX_RELEASE_MANIFEST
-    git status
+    git config user.email "aca-it@uw.edu"
+    git config user.name "uw-it-aca-tools"
     git commit -m "$COMMIT_MESSAGE" $FLUX_RELEASE_MANIFEST 2>&1 | sed -E 's/[[:xdigit:]]{32,}/[secret]/g'
     git push origin $FLUX_RELEASE_BRANCH_NAME 2>&1 | sed -E 's/[[:xdigit:]]{32,}/[secret]/g'
     git status
@@ -193,7 +194,6 @@ submit_flux_pull_release() {
         return
     fi
 
-    pushd $FLUX_LOCAL_DIR
     curl -H "Authorization: Token ${GH_AUTH_TOKEN}" -H "Content-type: application/json" -X POST $GITHUB_API_PULLS >${FLUX_PR_OUTPUT} -d @- <<EOF
 {
   "title": "${COMMIT_MESSAGE}",
@@ -204,7 +204,6 @@ submit_flux_pull_release() {
 EOF
     FLUX_PULL_URL=$(jq '.html_url' ${FLUX_PR_OUTPUT})
     echo "SUBMITTED $FLUX_PULL_URL"
-    popd
 }
 
 merge_flux_pull_request() {
@@ -216,7 +215,6 @@ merge_flux_pull_request() {
 
     GITHUB_API_MERGE="$(jq --raw-output '.url' ${FLUX_PR_OUTPUT})/merge"
 
-    pushd $FLUX_LOCAL_DIR
     curl -H "Authorization: Token ${GH_AUTH_TOKEN}" -H "Content-type: application/json" -X PUT $GITHUB_API_MERGE -d @- <<EOF
 {
   "commit_title": "Automated merge of ${PULL_REQUEST_MESSAGE}",
@@ -225,7 +223,6 @@ merge_flux_pull_request() {
   "merge_method": "merge"
 }
 EOF
-    popd
 }
 
 deploy() {
@@ -251,7 +248,7 @@ deploy() {
 
     create_flux_release_branch
 
-    add_and_commit_flux_release
+    commit_flux_release
 
     submit_flux_pull_release
 
