@@ -11,7 +11,7 @@
 #   GH_AUTH_TOKEN: access to private flux deployment repo
 #   GCP_JSON_KEY: Google Cloud Registry access key
 #
-#   NOTE: you may need to add your repo to GCR key's repo scope
+#   NOTE: secrets scoped to specific repo's so wil need to add yours to the list
 # 
 # Adapting this config to a specific django project should be a simple matter of:
 #
