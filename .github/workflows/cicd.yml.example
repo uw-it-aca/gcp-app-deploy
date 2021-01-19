@@ -3,43 +3,47 @@
 #
 # Preconditions:
 #
-#  1) application docker build based on django-container
-#  2) application test suite kicked off in docker/test.sh
+#  1) Application docker build is based on django-container
 #
-# Secrets externally:
+#  2) Application test suite is kicked off in docker/test.sh
 #
-#   GH_AUTH_TOKEN: access to private flux deployment repo
-#   GCP_JSON_KEY: Google Cloud Registry access key
+#  3) Application repo has access to the two secrets
+#     at https://github.com/organizations/uw-it-aca/settings/secrets:
 #
-#   NOTE: secrets scoped to specific repo's so wil need to add yours to the list
-# 
-# Adapting this config to a specific django project should be a simple matter of:
+#     GH_AUTH_TOKEN: Grants access to private flux deployment repo
+#     GCP_JSON_KEY: Grants access to Google Cloud Registry
 #
-#  1) set RELEASE_NAME suitable for deployment to k8s. The release name must
-#     also match the "repo" value in docker/*-values.yml
-#  2) set DJANGO_APP to the name of django project
-#  3) confirm that the build steps are suitable.  Likely they are, but
+# To adapt this config file to a specific django project:
+#
+#  1) Set RELEASE_NAME suitable for deployment to k8s. RELEASE_NAME must
+#     match the "repo" value in docker/*-values.yml.
+#
+#  2) Set DJANGO_APP to the name of the django project name/directory.
+#
+#  3) Verify that the lists of branches for push/pull_request is appropriate,
+#     and add other branch names if needed.  Additional branch names must
+#     also have steps defined in the deploy job
+#
+#  4) Confirm that the build steps are suitable.  Likely they are, but
 #     some projects have an intermediate build step that could benefit
-#     from caching, so it may be useful to augment the build steps
+#     from caching, so it may be useful to augment the build steps.
 #
 ---
 name: Build, Test and Deploy
 
 env:
-  # release name must match "repo" value in docker/*-values.yml
+  # Release name must match "repo" value in docker/*-values.yml
   RELEASE_NAME: appname
-  DJANGO_APP: djangoproject
+  DJANGO_APP: django_project
   GCR_TAG_BASE: gcr.io/uwit-mci-axdd
 
-#
 # Be sure that branches defined here have corresponding steps
 # defined in the "deploy" job
-#
 on:
   push:
-    branches: [main, master, develop, feature/eval-me]
+    branches: [main, master, qa, develop, feature/eval-me]
   pull_request:
-    branches: [main, master, develop, feature/eval-me]
+    branches: [main, master, qa, develop, feature/eval-me]
     types: [opened, reopened, synchronize]
 
 jobs:
@@ -161,12 +165,12 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
 
-      - name: Deploy Production
+      - name: Deploy Production Branch
         if: env.GIT_REPO_BRANCH == 'main' || env.GIT_REPO_BRANCH == 'master'
         run: curl -Ls ${DEPLOY_APP_BASE}/${DEPLOY_APP_BRANCH}/deploy.sh | bash
 
       - name: Deploy Test Branch
-        if: env.GIT_REPO_BRANCH == 'develop'
+        if: env.GIT_REPO_BRANCH == 'develop' || env.GIT_REPO_BRANCH == 'qa'
         run: curl -Ls ${DEPLOY_APP_BASE}/${DEPLOY_APP_BRANCH}/deploy.sh | bash
 
       - name: Deploy Evaluation Branch
